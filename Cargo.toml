@@ -1,0 +1,9 @@
+[package]
+name = "reality_marble"
+version = "0.0.1"
+authors = ["Martin Evans <martindevans@gmail.com>"]
+
+[dependencies]
+rustc-serialize = "0.3"
+clap = "1.4.2"
+log = "0.3.2"
