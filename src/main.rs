@@ -7,6 +7,7 @@ extern crate log;
 
 mod events;
 mod logging;
+mod machine;
 
 fn main() {
     //Setup logging
@@ -31,26 +32,37 @@ fn main() {
         ).arg_group(ArgGroup::with_name("log")
             .required(true)
             .add_all(&["event_log", "in_memory"])
+        ).arg(Arg::with_name("create")
+            .help("If set, a new machine will be setup with default state")
+            .short("c")
+            .long("create")
         ).get_matches();
 
-    let log_path = matches.value_of("event_log");
-    match log_path {
-        Some(path) => info!("Event Log Path: {}", path),
-        None => warn!("No event log! All events are transient")
+    //Are we setting up a new machine?
+    let create = matches.is_present("create");
+        
+    // Create or load an event store
+    let store = match matches.value_of("event_log") {
+        Some(path) => {
+            info!("Event Log Path: {}", path);
+            panic!("Event persistent not implemented");
+        },
+        None => {
+            warn!("No event log! All events are transient");
+            events::InMemoryStore::new()
+        }
+    };
+        
+    // Create a machine
+    let mut machine = machine::Machine::new(store);
+    
+    // If we're creating a machine, let's setup the default machine state now
+    if (create) {
+        warn!("Default machine state not implemented yet");
     }
         
-    //Setup the event system
-    let events = events::begin_event_system(log_path);
-    
-    //Block until the event system terminates
-    let result = events.block();
-    
-    //There are two reasons for the event system to stop processing...
-    match result {
-        // This was a deliberate termination, i.e. universe is being paused
-        Ok(code) => info!("The Machine Stops (Reason): {:?}", code),
-        
-        // Something went wrong, i.e. universe has been destroyed
-        Err(msg) => panic!(msg)
-    }
+    //Block until the machine terminates for some reason
+    let result = machine.apply(machine::Noun::Atom(vec![]));
+
+    println!("{:?}", result);
 }

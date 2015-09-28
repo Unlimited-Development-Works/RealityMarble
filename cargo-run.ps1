@@ -1,3 +1,3 @@
 cls;
 get-date;
-cargo run -- -m
+cargo run -- --in_memory --create
