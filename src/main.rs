@@ -48,21 +48,19 @@ fn main() {
             panic!("Event persistent not implemented");
         },
         None => {
-            warn!("No event log! All events are transient");
+            warn!("In-Memory event log - All events are transient");
             events::InMemoryStore::new()
         }
     };
         
     // Create a machine
-    let mut machine = machine::Machine::new(store);
+    let mut machine = if create {
+        //Create an entirely new machine which logs to the given event store
+        machine::Machine::new(store)
+    } else {
+        //Rebuild a machine from the given event log
+        machine::Machine::rebuild(store)
+    };
     
-    // If we're creating a machine, let's setup the default machine state now
-    if (create) {
-        warn!("Default machine state not implemented yet");
-    }
-        
-    //Block until the machine terminates for some reason
-    let result = machine.apply(machine::Noun::Atom(vec![]));
-
-    println!("{:?}", result);
+    machine.apply(vec![]);
 }
